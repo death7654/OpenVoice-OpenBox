@@ -1,0 +1,27 @@
+.card {
+  border-radius: 1rem;
+}
+
+.suggestion-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.suggestion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+textarea {
+  resize: none;
+}
+
+/* Make the form section pop */
+.card-body form {
+  background: #f8faff;
+  border-radius: 1rem;
+}
+
+/* Add subtle spacing between cards */
+.row.g-3 {
+  margin-top: 10px;
+}

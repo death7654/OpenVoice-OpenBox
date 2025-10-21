@@ -1,0 +1,32 @@
+- Add sidebar for suggestions page – navigation with options like New Suggestions, All Suggestions, Login
+- Add New Suggestions page – users can submit suggestions
+- Make New Suggestions into Markdown – live preview + formatted rendering
+- Add All Suggestions page – view all suggestions submitted
+- Add a search method – search by title, description, or tags
+- Add a filter method – filter by tags, categories, or status
+- Add an Admin page – for moderation and analytics
+- add sorting page
+- error handling
+- Connect everything to Firebase – store suggestions, users, and admin data
+- Add an Admin login page – secure access for admins
+- Voting system – upvotes and downvotes for suggestions
+- Priority and status management – admin can set priority, status, and solved/resolved
+- Tagging system – add multiple tags per suggestion and filter by tags
+- Attachments support – allow images/files with suggestions
+- Comment system – users/admins can add comments on suggestions
+- Suggestion ID & timestamp tracking – automatic ID, created/updated/resolved timestamps
+- Suggestion analytics dashboard – show top suggestions, most upvoted, pending/resolved stats
+- Search autocomplete – suggest tags or titles as the user types
+- Notifications system – notify admins of new suggestions
+- Responsive design – mobile-friendly sidebar and pages
+- Live Markdown preview – split-screen editor for writing suggestions
+- Soft delete – allow admin to hide suggestions instead of permanently deleting
+- Pinned suggestions – highlight top suggestions at the top of lists
+- User anonymity with optional identification – anonymous submissions or optional user ID
+- Filter by multiple criteria – tags + priority + status combined
+- Firebase auth integration – admin login and possibly user login for tracking votes/comments
+- Dark mode toggle – optional but looks professional
+- Export suggestions – allow admin to export data to CSV/JSON for reports
+- History of changes – track updates made to suggestions (status changes, comments)
+- Tooltips and UI hints – improve UX for tags, voting, and Markdown usage
+- Optional voice input – allow users to speak their suggestion and convert to text

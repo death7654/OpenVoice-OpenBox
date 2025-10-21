@@ -1,0 +1,37 @@
+.nav-blue {
+  background: linear-gradient(90deg, #007bff 0%, #00b4d8 100%);
+  border-bottom: 3px solid #0056b3;
+}
+
+.navbar-brand {
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-link {
+  transition: all 0.2s ease;
+  margin-left: 0.75rem;
+  margin-right: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+}
+
+.navbar-toggler {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.navbar-toggler-icon {
+  filter: invert(1);
+}
+
+.nav-blue {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

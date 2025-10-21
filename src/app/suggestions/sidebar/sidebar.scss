@@ -1,0 +1,20 @@
+.sidebar {
+  width: 220px;
+  min-width: 200px;
+}
+
+.nav-link {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+  color: #fff;
+}
+
+.bi {
+  font-size: 1.2rem;
+}
