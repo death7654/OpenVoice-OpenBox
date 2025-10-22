@@ -1,29 +1,109 @@
-
 .tag-input-container {
-  min-height: calc(1.5em + 0.75rem + 2px); 
-  padding-top: 5px; 
-  padding-bottom: 5px;
+  min-height: calc(1.5em + 0.75rem + 2px);
+  padding: 5px;
+  display: flex;
+  flex-wrap: wrap;       /* allow badges and input to wrap on small screens */
+  gap: 0.25rem;          /* space between badges and input */
 }
 
 .tag-input-field {
+  flex: 1 1 80px;        /* grow to fill space, shrink if needed, min 80px */
   height: auto;
   line-height: 1.5;
-  
-  min-width: 80px; 
-  
+  min-width: 80px;
+
   &:focus {
     outline: none !important;
     box-shadow: none !important;
+  }
+
+  /* mobile-specific adjustments */
+  @media (max-width: 576px) {
+    min-width: 50px;
+    font-size: 0.9rem;
   }
 }
 
 .tag-badge {
   display: flex;
   align-items: center;
+  white-space: nowrap;  /* prevent text from breaking mid-tag */
+  font-size: 0.85rem;
+
+  button.btn-close {
+    margin-left: 0.25rem;
+  }
+
+  @media (max-width: 576px) {
+    font-size: 0.75rem;  /* smaller badge text on mobile */
+    padding: 0.25rem 0.5rem;
+  }
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-  transition: all 0.2s ease;
+/* Styles for mobile-friendly suggestion form */
+.tag-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: calc(1.5em + 0.75rem + 2px);
+  padding: 5px;
 }
+
+.tag-input-field {
+  flex: 1 1 80px; /* grow to fill, shrink if needed */
+  min-width: 80px;
+  height: auto;
+  line-height: 1.5;
+
+  &:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  @media (max-width: 576px) {
+    min-width: 50px;
+    font-size: 0.9rem;
+  }
+}
+
+.tag-badge {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.85rem;
+
+  button.btn-close {
+    margin-left: 0.25rem;
+  }
+
+  @media (max-width: 576px) {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.markdown-output {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Make input/select full width on small devices */
+@media (max-width: 768px) {
+  input.form-control,
+  select.form-select {
+    max-width: 100%;
+  }
+}
+
+/* Make nav-tabs wrap nicely on mobile */
+.nav-tabs {
+  flex-wrap: wrap;
+}
+
+.nav-tabs .nav-link {
+  flex: 1 1 auto;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+

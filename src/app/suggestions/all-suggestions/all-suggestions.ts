@@ -1,16 +1,15 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
 import { FormsModule } from '@angular/forms';
+import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
 import { SlicePipe } from '@angular/common';
-
-declare var bootstrap: any;
-
+import { Modal } from 'bootstrap';
 
 interface Suggestion {
   id: string;
   title: string;
   description: string;
+  summary: string;
   tags: string[];
   solved: boolean;
   category: string;
@@ -20,17 +19,18 @@ interface Suggestion {
   status: string;
   updated_at: string;
   created_at: string;
-  resolved_at: string;
+  resolved_at: string | null;
   comments: string[];
   comment_count: number;
   attachments: string[];
   is_public: boolean;
 }
 
+
 @Component({
   selector: 'app-all-suggestions',
   standalone: true,
-  imports: [MarkdownComponent, CommonModule, FormsModule, MarkdownModule, SlicePipe],
+  imports: [CommonModule, FormsModule, MarkdownModule, MarkdownComponent, SlicePipe],
   templateUrl: './all-suggestions.html',
 })
 export class AllSuggestions implements OnInit {
@@ -39,15 +39,24 @@ export class AllSuggestions implements OnInit {
   searchQuery = '';
   selectedTag = 'All';
   selectedCategory = 'All';
-  isBrowser = false;
   sortOrder: 'votes' | 'newest' | 'oldest' | 'solved' | 'unsolved' = 'votes';
   userUpvotes: string[] = [];
   userDownvotes: string[] = [];
+  newComment = '';
+
+  private lastSearchQuery = '';
+  private lastSelectedTag = 'All';
+  private lastSelectedCategory = 'All';
+  private lastSortOrder: 'votes' | 'newest' | 'oldest' | 'solved' | 'unsolved' = 'votes';
+
 
   selectedSuggestion: Suggestion | null = null;
+  private suggestionModal: Modal | null = null;
 
   private readonly UPVOTES_KEY = 'userUpvotes';
   private readonly DOWNVOTES_KEY = 'userDownvotes';
+
+  isBrowser = false;
 
   allCategories = [
     'Academics & Curriculum',
@@ -68,12 +77,10 @@ export class AllSuggestions implements OnInit {
       this.loadSuggestions();
       this.loadUserVotes();
       this.filter();
-    }
-  }
 
-  // Getter for public suggestions
-  get publicSuggestions(): Suggestion[] {
-    return this.suggestions.filter(s => s.is_public);
+      this.filteredSuggestions = [...this.suggestions];
+      this.filteredSuggestions = this.sortSuggestions(this.filteredSuggestions);
+    }
   }
 
   private loadSuggestions(): void {
@@ -88,59 +95,55 @@ export class AllSuggestions implements OnInit {
     this.userDownvotes = downvotesStored ? JSON.parse(downvotesStored) : [];
   }
 
-  search() {
-    this.filter();
+  filter() {
+   if  
+      (this.searchQuery === this.lastSearchQuery &&
+       this.selectedTag === this.lastSelectedTag &&
+       this.selectedCategory === this.lastSelectedCategory &&
+       this.sortOrder === this.lastSortOrder)
+   {
+  return;
+}
+
+    const term = this.searchQuery.toLowerCase().trim();
+
+    this.filteredSuggestions = this.suggestions.filter(s => {
+      if (!s.is_public) return false;
+
+      const matchesSearch =
+        s.title.toLowerCase().includes(term) || s.description.toLowerCase().includes(term);
+      const matchesTag = this.selectedTag === 'All' || s.tags.includes(this.selectedTag);
+      const matchesCategory =
+        this.selectedCategory === 'All' || s.category === this.selectedCategory;
+
+      return matchesSearch && matchesTag && matchesCategory;
+    });
+
+    this.filteredSuggestions = this.sortSuggestions(this.filteredSuggestions);
   }
 
-  filter() {
-  const term = this.searchQuery.toLowerCase().trim();
-
-  this.filteredSuggestions = this.suggestions.filter(s => {
-    if (!s.is_public) return false;
-
-    const matchesSearch =
-      s.title.toLowerCase().includes(term) || s.description.toLowerCase().includes(term);
-
-    const matchesTag = this.selectedTag === 'All' || s.tags.includes(this.selectedTag);
-
-    const matchesCategory =
-      this.selectedCategory === 'All' || s.category === this.selectedCategory;
-
-    return matchesSearch && matchesTag && matchesCategory;
-  });
-
-  this.filteredSuggestions = this.sortSuggestions(this.filteredSuggestions);
-}
-
   private sortSuggestions(suggestions: Suggestion[]): Suggestion[] {
-  return [...suggestions].sort((a, b) => {
-    switch (this.sortOrder) {
-      case 'votes':
-        return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
-
-      case 'newest':
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-
-      case 'oldest':
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-
-      case 'solved':
-        // Solved first
-        const aSolved = a.status === 'Solved' || a.status === 'Closed' ? 1 : 0;
-        const bSolved = b.status === 'Solved' || b.status === 'Closed' ? 1 : 0;
-        return bSolved - aSolved;
-
-      case 'unsolved':
-        // Unsolved first
-        const aUnsolved = a.status !== 'Solved' && a.status !== 'Closed' ? 1 : 0;
-        const bUnsolved = b.status !== 'Solved' && b.status !== 'Closed' ? 1 : 0;
-        return bUnsolved - aUnsolved;
-
-      default:
-        return 0;
-    }
-  });
-}
+    return [...suggestions].sort((a, b) => {
+      switch (this.sortOrder) {
+        case 'votes':
+          return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'solved':
+          const aSolved = a.status === 'Solved' || a.status === 'Closed' ? 1 : 0;
+          const bSolved = b.status === 'Solved' || b.status === 'Closed' ? 1 : 0;
+          return bSolved - aSolved;
+        case 'unsolved':
+          const aUnsolved = a.status !== 'Solved' && a.status !== 'Closed' ? 1 : 0;
+          const bUnsolved = b.status !== 'Solved' && b.status !== 'Closed' ? 1 : 0;
+          return bUnsolved - aUnsolved;
+        default:
+          return 0;
+      }
+    });
+  }
 
   getAllTags(): string[] {
     const tags = new Set<string>();
@@ -148,7 +151,8 @@ export class AllSuggestions implements OnInit {
     return ['All', ...Array.from(tags)];
   }
 
-  upvote(s: Suggestion) {
+  upvote(s: Suggestion, event?: MouseEvent) {
+    if (event) event.stopPropagation();
     if (!this.isBrowser) return;
 
     if (this.userUpvotes.includes(s.id)) {
@@ -167,17 +171,8 @@ export class AllSuggestions implements OnInit {
     this.filter();
   }
 
-  openSuggestion(s: Suggestion) {
-  this.selectedSuggestion = s;
-
-  const modalEl = document.getElementById('suggestionModal');
-  if (modalEl) {
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-  }
-}
-
-  downvote(s: Suggestion) {
+  downvote(s: Suggestion, event?: MouseEvent) {
+    if (event) event.stopPropagation();
     if (!this.isBrowser) return;
 
     if (this.userDownvotes.includes(s.id)) {
@@ -194,6 +189,26 @@ export class AllSuggestions implements OnInit {
     this.save();
     this.saveUserVotes();
     this.filter();
+  }
+
+  openSuggestion(s: Suggestion) {
+    if (!this.isBrowser) return;
+
+    this.selectedSuggestion = s;
+
+    import('bootstrap').then(({ Modal }) => {
+      const modalEl = document.getElementById('suggestionModal');
+      if (modalEl) {
+        const modal = new Modal(modalEl);
+        modal.show();
+      }
+    });
+  }
+
+  closeSuggestion() {
+    if (this.suggestionModal) {
+      this.suggestionModal.hide();
+    }
   }
 
   save() {
@@ -220,4 +235,24 @@ export class AllSuggestions implements OnInit {
   hasDownvoted(s: Suggestion): boolean {
     return this.userDownvotes.includes(s.id);
   }
+
+
+addComment() {
+  if (!this.newComment.trim() || !this.selectedSuggestion) return;
+
+  if (!this.selectedSuggestion.comments) {
+    this.selectedSuggestion.comments = [];
+  }
+
+  this.selectedSuggestion.comments.push(this.newComment.trim());
+  this.newComment = '';
+
+  // Update the suggestion in the main array and localStorage
+  const index = this.suggestions.findIndex(s => s.id === this.selectedSuggestion!.id);
+  if (index > -1) {
+    this.suggestions[index] = this.selectedSuggestion;
+    this.save();
+  }
+}
+
 }

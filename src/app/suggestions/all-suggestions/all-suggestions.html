@@ -1,7 +1,7 @@
 <div class="container-fluid p-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold">All Suggestions</h3>
-    </div>
+  </div>
 
   <div class="row mb-4">
     <div class="col-sm-6 col-md-3 mb-2">
@@ -26,9 +26,7 @@
     <div class="col-sm-6 col-md-3 mb-2">
       <select class="form-select" [(ngModel)]="selectedTag" (change)="filter()">
         <option value="All">Filter by Tag</option>
-        <option *ngFor="let tag of getAllTags()" [value]="tag">
-          #{{ tag }}
-        </option>
+        <option *ngFor="let tag of getAllTags()" [value]="tag">#{{ tag }}</option>
       </select>
     </div>
 
@@ -47,58 +45,61 @@
     No suggestions found matching the current criteria.
   </div>
 
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  <div
+    class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3"
+    style="max-height: 70vh; overflow-y: auto"
+  >
     <div *ngFor="let s of filteredSuggestions" class="col">
-      <div class="card shadow-sm border-0 h-100 " (click)="openSuggestion(s)">
+      <div class="card shadow-sm border-0 h-100" (click)="openSuggestion(s)">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title fw-bold">{{ s.title }}</h5>
-            
+
             <span
               class="badge text-light text-uppercase"
-              [ngClass]="{'bg-success': s.status === 'Solved', 'bg-warning': s.status === 'Pending', 'bg-info': s.status === 'In Progress', 'bg-danger': s.status ==='Closed'}"
-              style="font-size: 0.7rem;"
-              >{{ s.status }}</span
+              [ngClass]="{
+                'bg-success': s.status === 'Solved',
+                'bg-warning': s.status === 'Pending',
+                'bg-info': s.status === 'In Progress',
+                'bg-danger': s.status === 'Closed',
+                'bg-primary': s.status === 'Planned',
+                'bg-secondary': s.status === 'Not Planned'
+              }"
+              style="font-size: 0.7rem"
             >
+              {{ s.status }}
+            </span>
           </div>
 
           <span class="badge bg-secondary-subtle text-dark mb-2">{{ s.category }}</span>
 
-          <markdown
-            [data]="
-              s.description.length > 200
-                ? (s.description | slice: 0:200) + '...'
-                : s.description
-            "
-          ></markdown>
+          <p>
+            {{ s.summary.length > 200 ? (s.summary | slice : 0 : 200) + '...' : s.summary }}
+          </p>
 
           <div class="mt-3">
-            <span
-              *ngFor="let tag of s.tags"
-              class="badge bg-secondary me-1 text-light"
+            <span *ngFor="let tag of s.tags" class="badge bg-secondary me-1 text-light"
               >#{{ tag }}</span
             >
           </div>
         </div>
 
-        <div
-          class="card-footer bg-light d-flex justify-content-between align-items-center"
-        >
-          <div class="text-muted small">
-            Submitted: {{ formatDate(s.created_at) }}
-          </div>
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+          <div class="text-muted small">Submitted: {{ formatDate(s.created_at) }}</div>
 
           <div class="d-flex align-items-center gap-2">
-            <button 
-              class="btn btn-sm" 
-              [ngClass]="{'btn-success': hasUpvoted(s), 'btn-outline-success': !hasUpvoted(s)}"
-              (click)="upvote(s)">
+            <button
+              class="btn btn-sm"
+              [ngClass]="{ 'btn-success': hasUpvoted(s), 'btn-outline-success': !hasUpvoted(s) }"
+              (click)="upvote(s); $event.stopPropagation()"
+            >
               👍 {{ s.upvotes }}
             </button>
-            <button 
-              class="btn btn-sm" 
-              [ngClass]="{'btn-danger': hasDownvoted(s), 'btn-outline-danger': !hasDownvoted(s)}"
-              (click)="downvote(s)">
+            <button
+              class="btn btn-sm"
+              [ngClass]="{ 'btn-danger': hasDownvoted(s), 'btn-outline-danger': !hasDownvoted(s) }"
+              (click)="downvote(s); $event.stopPropagation()"
+            >
               👎 {{ s.downvotes }}
             </button>
           </div>
@@ -108,34 +109,92 @@
   </div>
 
   <!-- Suggestion Details Modal -->
-<div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0">
-      <div class="modal-header bg-dark text-white rounded-top-4">
-        <h5 class="modal-title" id="suggestionModalLabel">{{ selectedSuggestion?.title }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body p-4">
-        <h6 class="fw-semibold">Category:</h6>
-        <span class="badge bg-secondary mb-3">{{ selectedSuggestion?.category }}</span>
-
-        <h6 class="fw-semibold">Description:</h6>
-        <markdown [data]="selectedSuggestion?.description"></markdown>
-
-        <h6 class="fw-semibold mt-3">Explanation:</h6>
-        <markdown [data]="selectedSuggestion?.description || 'No explanation provided.'"></markdown>
-
-        <div class="mt-3">
-          <span *ngFor="let tag of selectedSuggestion?.tags" class="badge bg-secondary me-1">#{{ tag }}</span>
+  <div
+    class="modal fade"
+    id="suggestionModal"
+    tabindex="-1"
+    aria-labelledby="suggestionModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header bg-dark text-white rounded-top-4">
+          <h5 class="modal-title" id="suggestionModalLabel">{{ selectedSuggestion?.title }}</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
-      </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <div class="modal-body p-4">
+          <!-- Category, Tags, and Priority -->
+          <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge bg-secondary">{{ selectedSuggestion?.category }}</span>
+
+            <span *ngFor="let tag of selectedSuggestion?.tags" class="badge bg-secondary"
+              >#{{ tag }}</span
+            >
+
+            <span
+              class="badge"
+              [ngClass]="{
+                'bg-danger': selectedSuggestion?.priority === 'High',
+                'bg-warning text-dark': selectedSuggestion?.priority === 'Medium',
+                'bg-success': selectedSuggestion?.priority === 'Low'
+              }"
+            >
+              {{ selectedSuggestion?.priority }}
+            </span>
+          </div>
+
+          <div class="mb-3 text-muted small">
+            Last Updated: {{ selectedSuggestion?.updated_at | date : 'medium' }}
+          </div>
+          <h6 class="fw-semibold">AI Summary:</h6>
+          <p>{{selectedSuggestion?.summary}}</p>
+
+
+          <h6 class="fw-semibold">Description:</h6>
+          <markdown
+            [data]="selectedSuggestion?.description || 'No description provided.'"
+          ></markdown>
+
+          <div class="mt-4">
+            <h6 class="fw-semibold">Discussion:</h6>
+
+            <div
+              *ngIf="selectedSuggestion && selectedSuggestion.comments.length > 0"
+              class="list-group mb-3"
+            >
+              <div *ngFor="let comment of selectedSuggestion?.comments" class="list-group-item">
+                {{ comment }}
+              </div>
+            </div>
+
+            <div *ngIf="!selectedSuggestion?.comments?.length" class="text-muted mb-3">
+              No discussion yet.
+            </div>
+
+            <!-- Add Comment Input -->
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Add a comment..."
+                [(ngModel)]="newComment"
+                (keydown.enter)="addComment()"
+              />
+              <button class="btn btn-primary" type="button" (click)="addComment()">Post</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
 </div>

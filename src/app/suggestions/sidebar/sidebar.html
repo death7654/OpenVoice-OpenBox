@@ -1,4 +1,10 @@
-<div class="sidebar bg-primary text-white vh-100 p-3 d-flex flex-column">
+<!-- Toggle button for small screens -->
+<button class="btn btn-primary d-md-none m-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+  <i class="bi bi-list"></i>
+</button>
+
+<!-- Sidebar for medium+ screens -->
+<div class="d-none d-md-flex flex-column bg-primary text-white vh-100 p-3 position-fixed" style="width: 250px;">
   <h4 class="fw-bold mb-4 text-center">Suggestion Box</h4>
 
   <ul class="nav flex-column">
@@ -12,5 +18,26 @@
 
   <div class="mt-auto text-center small text-white-50">
     © 2025 OpenVoice
+  </div>
+</div>
+
+<!-- Offcanvas sidebar for small screens -->
+<div class="offcanvas offcanvas-start bg-primary text-white" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title fw-bold" id="sidebarOffcanvasLabel">Suggestion Box</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column p-0">
+    <ul class="nav flex-column p-3">
+      <li *ngFor="let item of menuItems" class="nav-item mb-2">
+        <a [routerLink]="item.path" class="nav-link text-white d-flex align-items-center" data-bs-dismiss="offcanvas">
+          <i class="bi me-2" [ngClass]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+    <div class="mt-auto text-center small text-white-50 p-3">
+      © 2025 OpenVoice
+    </div>
   </div>
 </div>

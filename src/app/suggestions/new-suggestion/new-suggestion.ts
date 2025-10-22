@@ -8,6 +8,7 @@ interface Suggestion {
   id: string;
   title: string;
   description: string;
+  summary: string;
   tags: string[];
   solved: boolean;
   category: string;
@@ -118,6 +119,7 @@ export class NewSuggestion {
       id: crypto.randomUUID(),
       title: this.title,
       description: this.description,
+      summary: this.getsummary(),
       tags: this.parsedTags,
       category: this.selectedCategory,
       
@@ -147,6 +149,11 @@ export class NewSuggestion {
 
     this.resetForm();
     alert('✅ Suggestion submitted!');
+  }
+
+  getsummary()
+  {
+    return 'hi';
   }
 
   resetForm() {
