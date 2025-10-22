@@ -13,6 +13,7 @@ import { Sidebar } from "./sidebar/sidebar";
   styleUrl: './suggestions.scss'
 })
 export class Suggestions {
+  id: string | null = null;
 
 
 

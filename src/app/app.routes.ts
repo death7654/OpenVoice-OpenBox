@@ -1,9 +1,11 @@
-import { Routes } from '@angular/router';
-import { Suggestions } from './suggestions/suggestions';
-import { Admin } from './admin/admin';
-import { NewSuggestion } from './suggestions/new-suggestion/new-suggestion';
-import { AllSuggestions } from './suggestions/all-suggestions/all-suggestions';
-import { Login } from './suggestions/login/login';
+import { Routes } from "@angular/router";
+import { Suggestions } from "./suggestions/suggestions";
+import { NewSuggestion } from "./suggestions/new-suggestion/new-suggestion";
+import { AllSuggestions } from "./suggestions/all-suggestions/all-suggestions";
+import { Admin } from "./admin/admin";
+import { Login } from "./suggestions/login/login";
+import { CreateAccount } from "./suggestions/create-account/create-account";
+
 
 export const routes: Routes = [
   {
@@ -27,14 +29,19 @@ export const routes: Routes = [
         title: 'New Suggestion'
       },
       {
-        path: 'login',
-        component: Login,
-        title: 'login'
-      },
-      {
         path: 'all',
         component: AllSuggestions,
         title: 'All Suggestions'
+      },
+      {
+        path: 'login',
+        component: Login,
+        title: 'Login'
+      },
+      {
+        path: 'create-account',
+        component: CreateAccount,
+        title: 'Create Account'
       }
     ]
   },

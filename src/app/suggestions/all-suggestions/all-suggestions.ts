@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, Input  } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
@@ -43,6 +43,8 @@ export class AllSuggestions implements OnInit {
   userUpvotes: string[] = [];
   userDownvotes: string[] = [];
   newComment = '';
+
+  @Input() id: string | null = null;
 
   private lastSearchQuery = '';
   private lastSelectedTag = 'All';

@@ -1,7 +1,7 @@
-import { Component, Inject } from '@angular/core';
-import { FormsModule, NgModel } from '@angular/forms';
+import { Component, Input } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
+import { MarkdownModule } from 'ngx-markdown';
 
 // Define the Suggestion interface for type safety (CRITICAL FIX)
 interface Suggestion {
@@ -41,6 +41,7 @@ export class NewSuggestion {
   parsedTags: string[] = [];
   selectedCategory = '';
   fontSize = 14; // default font size
+  @Input() id: string | null = null;
 
   categories = [
     'Academics & Curriculum',
