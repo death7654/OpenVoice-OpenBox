@@ -1,0 +1,29 @@
+
+.tag-input-container {
+  min-height: calc(1.5em + 0.75rem + 2px); 
+  padding-top: 5px; 
+  padding-bottom: 5px;
+}
+
+.tag-input-field {
+  height: auto;
+  line-height: 1.5;
+  
+  min-width: 80px; 
+  
+  &:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.tag-badge {
+  display: flex;
+  align-items: center;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}

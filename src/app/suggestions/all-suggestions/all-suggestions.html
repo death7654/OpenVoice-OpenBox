@@ -1,40 +1,68 @@
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold">💡 All Suggestions</h3>
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold">All Suggestions</h3>
+    </div>
 
-    <div class="d-flex gap-2">
+  <div class="row mb-4">
+    <div class="col-sm-6 col-md-3 mb-2">
       <input
         type="text"
         class="form-control"
-        placeholder="Search suggestions..."
+        placeholder="Search title/description..."
         [(ngModel)]="searchQuery"
-        (input)="search()"
+        (input)="filter()"
       />
+    </div>
 
-      <select class="form-select" [(ngModel)]="selectedTag" (change)="filter()">
-        <option *ngFor="let tag of getAllTags()" [value]="tag">
-          {{ tag }}
+    <div class="col-sm-6 col-md-3 mb-2">
+      <select class="form-select" [(ngModel)]="selectedCategory" (change)="filter()">
+        <option value="All">All Categories</option>
+        <option *ngFor="let cat of allCategories" [value]="cat">
+          {{ cat }}
         </option>
+      </select>
+    </div>
+
+    <div class="col-sm-6 col-md-3 mb-2">
+      <select class="form-select" [(ngModel)]="selectedTag" (change)="filter()">
+        <option value="All">Filter by Tag</option>
+        <option *ngFor="let tag of getAllTags()" [value]="tag">
+          #{{ tag }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-sm-6 col-md-3 mb-2">
+      <select class="form-select" [(ngModel)]="sortOrder" (change)="filter()">
+        <option value="votes">Highest Votes</option>
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="solved">Solved</option>
+        <option value="unsolved">Unsolved</option>
       </select>
     </div>
   </div>
 
   <div *ngIf="filteredSuggestions.length === 0" class="text-center text-muted mt-4">
-    No suggestions found.
+    No suggestions found matching the current criteria.
   </div>
 
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
     <div *ngFor="let s of filteredSuggestions" class="col">
-      <div class="card shadow-sm border-0 h-100">
+      <div class="card shadow-sm border-0 h-100 " (click)="openSuggestion(s)">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title fw-bold">{{ s.title }}</h5>
+            
             <span
-              class="badge bg-primary text-light text-uppercase"
+              class="badge text-light text-uppercase"
+              [ngClass]="{'bg-success': s.status === 'Solved', 'bg-warning': s.status === 'Pending', 'bg-info': s.status === 'In Progress', 'bg-danger': s.status ==='Closed'}"
               style="font-size: 0.7rem;"
-              >{{ s.priority }}</span
+              >{{ s.status }}</span
             >
           </div>
+
+          <span class="badge bg-secondary-subtle text-dark mb-2">{{ s.category }}</span>
 
           <markdown
             [data]="
@@ -57,14 +85,20 @@
           class="card-footer bg-light d-flex justify-content-between align-items-center"
         >
           <div class="text-muted small">
-            {{ formatDate(s.created_at) }}
+            Submitted: {{ formatDate(s.created_at) }}
           </div>
 
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-success" (click)="upvote(s)">
+            <button 
+              class="btn btn-sm" 
+              [ngClass]="{'btn-success': hasUpvoted(s), 'btn-outline-success': !hasUpvoted(s)}"
+              (click)="upvote(s)">
               👍 {{ s.upvotes }}
             </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="downvote(s)">
+            <button 
+              class="btn btn-sm" 
+              [ngClass]="{'btn-danger': hasDownvoted(s), 'btn-outline-danger': !hasDownvoted(s)}"
+              (click)="downvote(s)">
               👎 {{ s.downvotes }}
             </button>
           </div>
@@ -72,4 +106,36 @@
       </div>
     </div>
   </div>
+
+  <!-- Suggestion Details Modal -->
+<div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0">
+      <div class="modal-header bg-dark text-white rounded-top-4">
+        <h5 class="modal-title" id="suggestionModalLabel">{{ selectedSuggestion?.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <h6 class="fw-semibold">Category:</h6>
+        <span class="badge bg-secondary mb-3">{{ selectedSuggestion?.category }}</span>
+
+        <h6 class="fw-semibold">Description:</h6>
+        <markdown [data]="selectedSuggestion?.description"></markdown>
+
+        <h6 class="fw-semibold mt-3">Explanation:</h6>
+        <markdown [data]="selectedSuggestion?.description || 'No explanation provided.'"></markdown>
+
+        <div class="mt-3">
+          <span *ngFor="let tag of selectedSuggestion?.tags" class="badge bg-secondary me-1">#{{ tag }}</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>

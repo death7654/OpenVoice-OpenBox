@@ -12,6 +12,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
-    importProvidersFrom(MarkdownModule.forRoot()) // <-- Add this line
+    importProvidersFrom(MarkdownModule.forRoot())
   ]
 };
