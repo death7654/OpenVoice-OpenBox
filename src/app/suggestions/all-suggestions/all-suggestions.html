@@ -90,15 +90,17 @@
           <div class="d-flex align-items-center gap-2">
             <button
               class="btn btn-sm"
-              [ngClass]="{ 'btn-success': hasUpvoted(s), 'btn-outline-success': !hasUpvoted(s) }"
-              (click)="upvote(s); $event.stopPropagation()"
+              [ngClass]="{ 'btn-success': hasUpvoted(s), 'btn-outline-success': !hasUpvoted(s), 'disabled': !isLoggedIn }"
+              [disabled]="!isLoggedIn"
+              (click)="upvote(s, $event)"
             >
               👍 {{ s.upvotes }}
             </button>
             <button
               class="btn btn-sm"
-              [ngClass]="{ 'btn-danger': hasDownvoted(s), 'btn-outline-danger': !hasDownvoted(s) }"
-              (click)="downvote(s); $event.stopPropagation()"
+              [ngClass]="{ 'btn-danger': hasDownvoted(s), 'btn-outline-danger': !hasDownvoted(s), 'disabled': !isLoggedIn }"
+              [disabled]="!isLoggedIn"
+              (click)="downvote(s, $event)"
             >
               👎 {{ s.downvotes }}
             </button>
@@ -108,7 +110,6 @@
     </div>
   </div>
 
-  <!-- Suggestion Details Modal -->
   <div
     class="modal fade"
     id="suggestionModal"
@@ -129,7 +130,6 @@
         </div>
 
         <div class="modal-body p-4">
-          <!-- Category, Tags, and Priority -->
           <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
             <span class="badge bg-secondary">{{ selectedSuggestion?.category }}</span>
 
@@ -162,31 +162,51 @@
           ></markdown>
 
           <div class="mt-4">
-            <h6 class="fw-semibold">Discussion:</h6>
+            <h6 class="fw-semibold">Discussion: ({{ selectedSuggestion?.comment_count || 0 }} comments)</h6>
 
             <div
               *ngIf="selectedSuggestion && selectedSuggestion.comments.length > 0"
               class="list-group mb-3"
             >
-              <div *ngFor="let comment of selectedSuggestion?.comments" class="list-group-item">
-                {{ comment }}
+              <div *ngFor="let comment of selectedSuggestion.comments" class="list-group-item d-flex flex-column">
+                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                  <div class="fw-bold">
+                    <span 
+                      class="me-2" 
+                      [ngClass]="{'text-success': comment.user_id === user_id, 'text-primary': comment.user_id !== user_id}" 
+                      title="User ID"
+                    >
+                      {{ comment.user_id | slice:0:8 }}...
+                    </span>
+                    <span *ngIf="comment.user_id === user_id" class="badge bg-success-subtle text-success border border-success-subtle">You</span>
+                  </div>
+
+                  <small class="text-muted" title="Comment Time">
+                    {{ comment.timestamp | date: 'short' }}
+                  </small>
+                </div>
+                
+                <p class="mb-0 text-break">{{ comment.text }}</p>
               </div>
-            </div>
+              </div>
 
             <div *ngIf="!selectedSuggestion?.comments?.length" class="text-muted mb-3">
               No discussion yet.
             </div>
 
-            <!-- Add Comment Input -->
-            <div class="input-group">
+            <div *ngIf="isLoggedIn" class="input-group">
               <input
                 type="text"
                 class="form-control"
-                placeholder="Add a comment..."
+                placeholder="Add a comment (Press Enter or click Post)..."
                 [(ngModel)]="newComment"
                 (keydown.enter)="addComment()"
               />
               <button class="btn btn-primary" type="button" (click)="addComment()">Post</button>
+            </div>
+            
+            <div *ngIf="!isLoggedIn" class="alert alert-warning small mt-3">
+                You must be **logged in** to post comments.
             </div>
           </div>
         </div>

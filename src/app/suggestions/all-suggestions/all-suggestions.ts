@@ -1,12 +1,21 @@
-import { Component, OnInit, Inject, PLATFORM_ID, Input  } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, Input, OnDestroy } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
 import { SlicePipe } from '@angular/common';
 import { Modal } from 'bootstrap';
+import { AuthService, UserState } from '../../core/account-state';
+import { Subscription } from 'rxjs'; 
+
+interface Comment {
+  user_id: string;
+  text: string;
+  timestamp: string;
+}
 
 interface Suggestion {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   summary: string;
@@ -20,12 +29,11 @@ interface Suggestion {
   updated_at: string;
   created_at: string;
   resolved_at: string | null;
-  comments: string[];
+  comments: Comment[];
   comment_count: number;
   attachments: string[];
   is_public: boolean;
 }
-
 
 @Component({
   selector: 'app-all-suggestions',
@@ -33,7 +41,7 @@ interface Suggestion {
   imports: [CommonModule, FormsModule, MarkdownModule, MarkdownComponent, SlicePipe],
   templateUrl: './all-suggestions.html',
 })
-export class AllSuggestions implements OnInit {
+export class AllSuggestions implements OnInit, OnDestroy { 
   suggestions: Suggestion[] = [];
   filteredSuggestions: Suggestion[] = [];
   searchQuery = '';
@@ -44,7 +52,9 @@ export class AllSuggestions implements OnInit {
   userDownvotes: string[] = [];
   newComment = '';
 
-  @Input() id: string | null = null;
+  isLoggedIn = false; 
+  private authSubscription!: Subscription; 
+  private authService = Inject(AuthService); 
 
   private lastSearchQuery = '';
   private lastSelectedTag = 'All';
@@ -54,6 +64,8 @@ export class AllSuggestions implements OnInit {
 
   selectedSuggestion: Suggestion | null = null;
   private suggestionModal: Modal | null = null;
+
+  user_id: string | null = null;
 
   private readonly UPVOTES_KEY = 'userUpvotes';
   private readonly DOWNVOTES_KEY = 'userDownvotes';
@@ -78,11 +90,22 @@ export class AllSuggestions implements OnInit {
     if (this.isBrowser) {
       this.loadSuggestions();
       this.loadUserVotes();
-      this.filter();
+      
+      this.authSubscription = this.authService.userState$.subscribe((state: UserState) => {
+        this.isLoggedIn = state.isLoggedIn;
+        this.user_id = state.accountId;
+      });
 
+      this.filter();
       this.filteredSuggestions = [...this.suggestions];
       this.filteredSuggestions = this.sortSuggestions(this.filteredSuggestions);
     }
+  }
+  
+  ngOnDestroy(): void {
+      if (this.authSubscription) {
+          this.authSubscription.unsubscribe();
+      }
   }
 
   private loadSuggestions(): void {
@@ -98,14 +121,14 @@ export class AllSuggestions implements OnInit {
   }
 
   filter() {
-   if  
-      (this.searchQuery === this.lastSearchQuery &&
-       this.selectedTag === this.lastSelectedTag &&
-       this.selectedCategory === this.lastSelectedCategory &&
-       this.sortOrder === this.lastSortOrder)
-   {
-  return;
-}
+     if 
+       (this.searchQuery === this.lastSearchQuery &&
+        this.selectedTag === this.lastSelectedTag &&
+        this.selectedCategory === this.lastSelectedCategory &&
+        this.sortOrder === this.lastSortOrder)
+    {
+     return;
+    }
 
     const term = this.searchQuery.toLowerCase().trim();
 
@@ -155,7 +178,7 @@ export class AllSuggestions implements OnInit {
 
   upvote(s: Suggestion, event?: MouseEvent) {
     if (event) event.stopPropagation();
-    if (!this.isBrowser) return;
+    if (!this.isBrowser || !this.isLoggedIn) return; 
 
     if (this.userUpvotes.includes(s.id)) {
       s.upvotes--;
@@ -175,7 +198,7 @@ export class AllSuggestions implements OnInit {
 
   downvote(s: Suggestion, event?: MouseEvent) {
     if (event) event.stopPropagation();
-    if (!this.isBrowser) return;
+    if (!this.isBrowser || !this.isLoggedIn) return; 
 
     if (this.userDownvotes.includes(s.id)) {
       s.downvotes--;
@@ -239,22 +262,32 @@ export class AllSuggestions implements OnInit {
   }
 
 
-addComment() {
+  addComment() {
+  if (!this.isLoggedIn || !this.user_id) {
+    console.error('Comment submission failed: User not logged in or user_id missing.');
+    return;
+  }
   if (!this.newComment.trim() || !this.selectedSuggestion) return;
+
+  const newCommentObject: Comment = {
+    user_id: this.user_id,
+    text: this.newComment.trim(),
+    timestamp: new Date().toISOString() 
+  };
 
   if (!this.selectedSuggestion.comments) {
     this.selectedSuggestion.comments = [];
   }
 
-  this.selectedSuggestion.comments.push(this.newComment.trim());
+  this.selectedSuggestion.comments.push(newCommentObject); 
+  
   this.newComment = '';
+  this.selectedSuggestion.comment_count = (this.selectedSuggestion.comments.length); // Use length for count
 
-  // Update the suggestion in the main array and localStorage
   const index = this.suggestions.findIndex(s => s.id === this.selectedSuggestion!.id);
   if (index > -1) {
-    this.suggestions[index] = this.selectedSuggestion;
+    this.suggestions[index] = this.selectedSuggestion; 
     this.save();
   }
 }
-
 }

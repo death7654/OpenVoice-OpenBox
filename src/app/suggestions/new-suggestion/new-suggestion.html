@@ -1,135 +1,159 @@
 <div class="container-fluid p-4 w-100">
   <h3 class="fw-semibold mb-4">Create a New Suggestion</h3>
 
+  <div *ngIf="submissionMessage" class="alert mb-4" role="alert"
+    [ngClass]="{
+      'alert-success': submissionMessage.startsWith('✅'),
+      'alert-warning': submissionMessage.startsWith('⚠️'),
+      'alert-danger': submissionMessage.startsWith('🚫')
+    }">
+    {{ submissionMessage }}
+  </div>
+
   <form (ngSubmit)="submit()" class="card shadow-sm border-0">
     <div class="card-body">
-      <div class="mb-3">
-        <input
-          type="text"
-          class="form-control form-control-lg fw-semibold"
-          placeholder="Title – e.g., Broken Water Fountain"
-          [(ngModel)]="title"
-          name="title"
-          required
-        />
+
+      <div *ngIf="!isLoggedIn" class="p-5 text-center bg-light rounded-3 mb-4 border" style="opacity: 0.8;">
+        <h4 class="text-danger fw-bold">Login Required</h4>
+        <p class="mb-0">You must be logged in to access and use the suggestion submission form.</p>
       </div>
 
-      <ul class="nav nav-tabs mb-2">
-        <li class="nav-item">
-          <button
-            type="button"
-            class="nav-link"
-            [class.active]="!preview"
-            (click)="preview = false"
-          >
-            Write
-          </button>
-        </li>
-        <li class="nav-item">
-          <button type="button" class="nav-link" [class.active]="preview" (click)="preview = true">
-            Preview
-          </button>
-        </li>
-      </ul>
+      <div [class.d-none]="!isLoggedIn">
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control form-control-lg fw-semibold"
+            placeholder="Title – e.g., Broken Water Fountain"
+            [(ngModel)]="title"
+            name="title"
+            required
+          />
+        </div>
 
-      <div *ngIf="!preview" class="border rounded p-3 bg-white mb-3">
-        <div class="d-flex mb-2">
-          <button
-            type="button"
-            class="btn btn-outline-secondary btn-sm me-2"
-            (click)="formatMarkdown('bold')"
-            title="Bold (**text**)"
-          >
-            B
-          </button>
-          <button
-            type="button"
-            class="btn btn-outline-secondary btn-sm me-2"
-            (click)="formatMarkdown('italic')"
-            title="Italic (*text*)"
-          >
-            I
-          </button>
-
-          <div class="ms-auto d-flex align-items-center">
+        <ul class="nav nav-tabs mb-2">
+          <li class="nav-item">
             <button
               type="button"
-              class="btn btn-outline-secondary btn-sm me-1"
-              (click)="sizeDown()"
-              title="Decrease Font Size"
+              class="nav-link"
+              [class.active]="!preview"
+              (click)="preview = false"
             >
-              A-
+              Write
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="preview" (click)="preview = true">
+              Preview
+            </button>
+          </li>
+        </ul>
+
+        <div *ngIf="!preview" class="border rounded p-3 bg-white mb-3">
+          <div class="d-flex mb-2">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm me-2"
+              (click)="formatMarkdown('bold')"
+              title="Bold (**text**)"
+            >
+              B
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary btn-sm"
-              (click)="sizeUp()"
-              title="Increase Font Size"
+              class="btn btn-outline-secondary btn-sm me-2"
+              (click)="formatMarkdown('italic')"
+              title="Italic (*text*)"
             >
-              A+
+              I
             </button>
+
+            <div class="ms-auto d-flex align-items-center">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm me-1"
+                (click)="sizeDown()"
+                title="Decrease Font Size"
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                (click)="sizeUp()"
+                title="Increase Font Size"
+              >
+                A+
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            class="form-control"
+            [style.fontSize.px]="fontSize"
+            rows="10"
+            [(ngModel)]="description"
+            name="description"
+            placeholder="Describe your suggestion (Markdown supported)..."
+          ></textarea>
+        </div>
+
+        <div *ngIf="preview" class="border rounded p-3 bg-light markdown-output mb-3" style="overflow-y: auto; max-height: 400px;">
+          <markdown
+            style="overflow-y: auto;"
+            [data]="description || '*Nothing to preview yet...*'"
+            [ngStyle]="{ 'font-size.px': fontSize }"
+          ></markdown>
+        </div>
+
+        <div class="row">
+          <div class="col-md-5 mb-3 ms-1">
+            <label class="fw-semibold mb-2">Category</label>
+            <select class="form-select" [(ngModel)]="selectedCategory" name="category" required>
+              <option value="" disabled selected>Select category</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+
+          <div class="col-md-6 mt-md-0 mb-3">
+            <label class="fw-semibold mb-2">Tags</label>
+            
+            <div class="tag-input-container form-control d-flex flex-wrap align-items-center gap-2">
+              
+              <span
+                class="tag-badge badge bg-primary text-white px-3 py-1"
+                *ngFor="let tag of parsedTags; let i = index"
+              >
+                {{ tag }}
+                <button
+                  type="button"
+                  class="btn-close btn-close-white btn-sm ms-2"
+                  aria-label="Remove"
+                  (click)="removeTag(i)"
+                ></button>
+              </span>
+              <input
+                type="text"
+                class="tag-input-field flex-grow-1 border-0 shadow-none p-0"
+                placeholder="Type a tag and press Space"
+                [(ngModel)]="tagInput"
+                name="tagInput"
+                (keydown.space)="addTag($event)" 
+                (keydown.enter)="addTag($event)"
+              />
+            </div>
           </div>
         </div>
-
-        <textarea
-          class="form-control"
-          [style.fontSize.px]="fontSize"
-          rows="10"
-          [(ngModel)]="description"
-          name="description"
-          placeholder="Describe your suggestion (Markdown supported)..."
-        ></textarea>
-      </div>
-
-      <div *ngIf="preview" class="border rounded p-3 bg-light markdown-output mb-3" style="overflow-y: auto; max-height: 400px;">
-        <markdown
-          style="overflow-y: auto;"
-          [data]="description || '*Nothing to preview yet...*'"
-          [ngStyle]="{ 'font-size.px': fontSize }"
-        ></markdown>
-      </div>
-
-      <div class="row">
-        <div class="col-md-5 mb-3 ms-1">
-          <label class="fw-semibold mb-2">Category</label>
-          <select class="form-select" [(ngModel)]="selectedCategory" name="category" required>
-            <option value="" disabled selected>Select category</option>
-            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-          </select>
-        </div>
-
-        <div class="col-md-6 mt-md-0 mb-3">
-  <label class="fw-semibold mb-2">Tags</label>
-  
-  <div class="tag-input-container form-control d-flex flex-wrap align-items-center gap-2">
-    
-    <span
-      class="tag-badge badge bg-primary text-white px-3 py-1"
-      *ngFor="let tag of parsedTags; let i = index"
-    >
-      {{ tag }}
-      <button
-        type="button"
-        class="btn-close btn-close-white btn-sm ms-2"
-        aria-label="Remove"
-        (click)="removeTag(i)"
-      ></button>
-    </span>
-    <input
-      type="text"
-      class="tag-input-field flex-grow-1 border-0 shadow-none p-0"
-      placeholder="Type a tag and press Space"
-      [(ngModel)]="tagInput"
-      name="tagInput"
-      (keydown.space)="addTag($event)" 
-      (keydown.enter)="addTag($event)"
-    />
-  </div>
-</div>
       </div>
 
       <div class="d-flex justify-content-end mt-4">
-        <button type="submit" class="btn btn-success px-4">Submit</button>
+        <button 
+          type="submit" 
+          class="btn px-4"
+          [disabled]="!isLoggedIn" 
+          [ngClass]="{'btn-success': isLoggedIn, 'btn-secondary': !isLoggedIn}"
+        >
+          Submit
+        </button>
       </div>
     </div>
   </form>

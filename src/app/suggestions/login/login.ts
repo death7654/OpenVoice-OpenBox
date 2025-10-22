@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -14,9 +14,11 @@ export class Login {
   prn = signal('');
   password = signal('');
   errorMessage = signal('');
+  id: string | null = null;
+  @Output() idEmitter = new EventEmitter<string>();
 
   login() {
-    const prnValue = this.prn().trim();
+    const prnValue = this.prn().trim().toUpperCase();
     const passwordValue = this.password().trim();
 
     if (!prnValue || !passwordValue) {
@@ -24,15 +26,17 @@ export class Login {
       return;
     }
 
-    const expectedPasswordPattern = new RegExp(`^${prnValue}\\d{1,5}$`);
-
-    if (!expectedPasswordPattern.test(passwordValue)) {
-      this.errorMessage.set('Password must be your PRN followed by your 4-5 digit Admission Number.');
-      return;
-    }
-
     this.errorMessage.set('');
     alert(`Login successful!\nPRN: ${prnValue}`);
+
+    
     // TODO: Navigate to the dashboard
+  }
+
+  sendIdToParent() {
+    if(this.id != null)
+    {
+      this.idEmitter.emit(this.id);
+    }
   }
 }
