@@ -3,9 +3,12 @@ import { Suggestions } from "./suggestions/suggestions";
 import { NewSuggestion } from "./suggestions/new-suggestion/new-suggestion";
 import { AllSuggestions } from "./suggestions/all-suggestions/all-suggestions";
 import { Admin } from "./admin/admin";
-import { Login } from "./suggestions/login/login";
-import { CreateAccount } from "./suggestions/create-account/create-account";
 
+// Assuming Login and Profile are now available for routing
+import { Login } from "./suggestions/account/login/login";
+import { Profile } from "./suggestions/account/profile/profile";
+import { CreateAccount } from "./suggestions/create-account/create-account";
+import { Account } from "./suggestions/account/account";
 
 export const routes: Routes = [
   {
@@ -24,25 +27,46 @@ export const routes: Routes = [
         pathMatch: 'full'
       },
       {
-        path: 'new',
-        component: NewSuggestion,
-        title: 'New Suggestion'
-      },
-      {
         path: 'all',
         component: AllSuggestions,
         title: 'All Suggestions'
       },
       {
-        path: 'login',
-        component: Login,
-        title: 'Login'
+        path: 'new',
+        component: NewSuggestion,
+        title: 'New Suggestion'
       },
       {
-        path: 'create-account',
-        component: CreateAccount,
-        title: 'Create Account'
-      }
+            // Path: /suggestions/account/create-account
+            path: 'create-account',
+            component: CreateAccount,
+            title: 'Create Account'
+      },
+      {
+        path: 'account',
+        component: Account,
+        title: 'OpenVoice Box - Account',
+        children: [
+          {
+            // Path: /suggestions/account (default)
+            path: '',
+            redirectTo: 'login',
+            pathMatch: 'full'
+          },
+          {
+            // Path: /suggestions/account/login
+            path: 'login',
+            component: Login,
+            title: 'Login',
+          },
+          {
+            // Path: /suggestions/account/profile
+            path: 'profile',
+            component: Profile,
+            title: 'Profile'
+          }
+        ]
+      },
     ]
   },
   {

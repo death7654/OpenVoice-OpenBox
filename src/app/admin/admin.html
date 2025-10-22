@@ -3,10 +3,8 @@
   <h2 class="fw-semibold">Admin Console</h2>
 </div>
 
-
 <div class="admin-container container-fluid py-5 pt-0 mt-0">
   @if (!isLoggedIn()) {
-  <!-- LOGIN SECTION -->
   <div class="d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow-sm border-0 p-4 p-md-5" style="max-width: 400px">
       <h3 class="fw-bold text-center text-dark mb-4">Admin Login</h3>
@@ -24,7 +22,7 @@
             id="username"
             type="text"
             required
-            placeholder="superuser"
+            placeholder="admin"
             [ngModel]="usernameInput()"
             (ngModelChange)="usernameInput.set($event)"
             name="username"
@@ -38,7 +36,7 @@
             id="password"
             type="password"
             required
-            placeholder="adminpass123"
+            placeholder="admin"
             [ngModel]="passwordInput()"
             (ngModelChange)="passwordInput.set($event)"
             name="password"
@@ -49,14 +47,40 @@
         <button type="submit" class="btn btn-primary w-100 fw-semibold">Log In</button>
       </form>
 
-      <p class="text-muted small text-center mt-3">
-        <strong>Hint:</strong> superuser / adminpass123
-      </p>
+      <p class="text-muted small text-center mt-3"><strong>Hint:</strong> admin / admin</p>
     </div>
   </div>
   } @else {
-  <!-- DASHBOARD SECTION -->
   <div class="container mt-4">
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="activeTab() === 'suggestions'"
+          (click)="setActiveTab('suggestions')"
+          style="cursor: pointer"
+        >
+          Suggestion Management
+        </a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          [class.active]="activeTab() === 'users'"
+          (click)="setActiveTab('users')"
+          style="cursor: pointer"
+        >
+          User Management ({{ allUsers().length }})
+        </a>
+      </li>
+      <li class="nav-item ms-auto">
+        <button class="btn btn-sm btn-outline-secondary" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </li>
+    </ul>
+
+    @if (activeTab() === 'suggestions') {
     <div class="row mb-3">
       <div class="col-md-6">
         <input
@@ -78,7 +102,6 @@
           <table class="table table-striped align-middle text-center">
             <thead class="table-light">
               <tr>
-                <!-- TITLE Column: Sortable Alpha -->
                 <th (click)="sortSuggestions('title')" class="sortable">
                   Title @if (sortColumn() === 'title') {
                   <i
@@ -91,7 +114,6 @@
                   }
                 </th>
 
-                <!-- CATEGORY Column: Sortable Alpha -->
                 <th (click)="sortSuggestions('category')" class="sortable">
                   Category @if (sortColumn() === 'category') {
                   <i
@@ -104,7 +126,6 @@
                   }
                 </th>
 
-                <!-- PRIORITY Column: Sortable Alpha -->
                 <th (click)="sortSuggestions('priority')" class="sortable">
                   Priority @if (sortColumn() === 'priority') {
                   <i
@@ -117,7 +138,6 @@
                   }
                 </th>
 
-                <!-- STATUS Column: Sortable Alpha -->
                 <th (click)="sortSuggestions('status')" class="sortable">
                   Status @if (sortColumn() === 'status') {
                   <i
@@ -130,7 +150,6 @@
                   }
                 </th>
 
-                <!-- PUBLIC Column: Sortable Numeric/Boolean -->
                 <th (click)="sortSuggestions('is_public')" class="sortable">
                   Public @if (sortColumn() === 'is_public') {
                   <i
@@ -145,7 +164,6 @@
                   }
                 </th>
 
-                <!-- UPVOTES Column: Sortable Numeric -->
                 <th (click)="sortSuggestions('upvotes')" class="sortable">
                   Upvotes @if (sortColumn() === 'upvotes') {
                   <i
@@ -166,7 +184,6 @@
             <tbody>
               @for (s of sortedSuggestions(); track s.id) {
               <tr>
-                <!-- Editable title -->
                 <td style="width: 15%">
                   <input
                     type="text"
@@ -176,7 +193,6 @@
                   />
                 </td>
 
-                <!-- Strict dropdown for category -->
                 <td style="width: 15%">
                   <select
                     [(ngModel)]="s.category"
@@ -189,7 +205,6 @@
                   </select>
                 </td>
 
-                <!-- Editable priority -->
                 <td style="width: 10%">
                   <select
                     [(ngModel)]="s.priority"
@@ -203,7 +218,6 @@
                   </select>
                 </td>
 
-                <!-- Editable status -->
                 <td style="width: 15%">
                   <select
                     [(ngModel)]="s.status"
@@ -219,7 +233,6 @@
                   </select>
                 </td>
 
-                <!-- Toggle visibility -->
                 <td style="width: 15%">
                   <div class="form-check form-switch d-flex justify-content-center">
                     <input
@@ -234,7 +247,6 @@
 
                 <td style="width: 10%">{{ s.upvotes }}</td>
 
-                <!-- ACTIONS COLUMN with View Comments -->
                 <td style="width: 20%">
                   <div class="p-2 pb-1">
                     <button
@@ -266,11 +278,64 @@
         </div>
       </div>
     </div>
+    } @if (activeTab() === 'users') {
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-light fw-bold">All Registered Users</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>PRN</th>
+                <th>Public ID</th>
+                <th>Email (Internal)</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of allUsers(); track user.firebaseUid) {
+              <tr>
+                <td>
+                  <code class="text-secondary">{{ user.random_id | slice : 0 : 8 }}...</code>
+                </td>
+                <td>{{ user.internal_email }}</td>
+                <td>
+                  @if (user.isBanned) {
+                  <span class="badge bg-danger">BANNED</span>
+                  } @else {
+                  <span class="badge bg-success">Active</span>
+                  }
+                </td>
+                <td>
+                  <button
+                    class="btn btn-sm"
+                    [ngClass]="user.isBanned ? 'btn-outline-success' : 'btn-outline-danger'"
+                    (click)="openBanModal(user)"
+                  >
+                    <i
+                      class="bi"
+                      [ngClass]="user.isBanned ? 'bi-check-circle' : 'bi-slash-circle'"
+                    ></i>
+                    {{ user.isBanned ? 'Unban User' : 'Ban User' }}
+                  </button>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="5" class="text-muted py-4">No users loaded.</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    }
   </div>
   }
 </div>
 
-<!-- COMMENTS MODAL STRUCTURE -->
 <div
   class="modal fade"
   id="commentsModal"
@@ -281,9 +346,8 @@
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content rounded-4 border-0">
       <div class="modal-header bg-dark text-white rounded-top-4">
-        <!-- Title shows the suggestion being reviewed -->
         <h5 class="modal-title" id="commentsModalLabel">
-          Comments for: {{ editingSuggestion?.title }}
+          Comments for: {{ editingSuggestion()?.title }}
         </h5>
         <button
           type="button"
@@ -293,18 +357,27 @@
         ></button>
       </div>
       <div class="modal-body p-4">
-        @if (editingSuggestion && editingSuggestion.comments.length > 0) {
-        <p class="text-muted small mb-3">Total Comments: {{ editingSuggestion.comments.length }}</p>
-        <!-- List of Comments -->
-        @for (comment of editingSuggestion.comments; track $index) {
-        <div class="card mb-3 border-start border-4 border-primary shadow-sm">
+        @if (editingSuggestion() && editingSuggestion()!.comments.length > 0) {
+        <p class="text-muted small mb-3">
+          Total Comments: {{ editingSuggestion()!.comments.length }}
+        </p>
+        @for (comment of editingSuggestion()!.comments; track $index) {
+        <div class="card mb-3 border-start border-1 border-secondary shadow-sm">
           <div class="card-body d-flex justify-content-between align-items-start">
             <div class="flex-grow-1 text-start me-3">
-              <!-- Display Comment Content -->
-              <p class="card-text mb-0">{{ comment }}</p>
+              <p class="card-text mb-2">
+                <span class="fw-bold">Comment:</span>
+                <span class="ms-1">{{ comment.text }}</span>
+              </p>
+
+              <small class="text-muted d-block">
+                By: <span class="fw-semibold">{{ comment.userId }}</span>
+                <span class="mx-2">|</span>
+                <i class="bi bi-clock"></i>
+                {{ comment.createdAt | date : 'short' }}
+              </small>
             </div>
 
-            <!-- Delete Comment Button -->
             <button
               class="btn btn-sm btn-outline-danger flex-shrink-0"
               (click)="deleteComment($index)"
@@ -317,6 +390,51 @@
         <div class="alert alert-info text-center" role="alert">
           No comments found for this suggestion.
         </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="banUserModal"
+  tabindex="-1"
+  aria-labelledby="banUserModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="banUserModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i> Confirm Ban Status
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        @if (editingUser()) {
+        <p class="mb-2">Change status for **{{ editingUser()!.random_id }}**?</p>
+        <h4 class="fw-bold">
+          Currently:
+          <span [ngClass]="editingUser()!.isBanned ? 'text-danger' : 'text-success'">
+            {{ editingUser()!.isBanned ? 'BANNED' : 'ACTIVE' }}
+          </span>
+        </h4>
+        <p class="small text-muted mt-3">
+          This action instantly updates the user's profile in the database.
+        </p>
+        }
+      </div>
+      <div class="modal-footer d-flex justify-content-center">
+        @if (editingUser()) {
+        <button
+          type="button"
+          class="btn w-100 fw-bold"
+          [ngClass]="editingUser()!.isBanned ? 'btn-success' : 'btn-danger'"
+          (click)="toggleBanStatus(editingUser()!)"
+        >
+          {{ editingUser()!.isBanned ? 'UNBAN USER' : 'BAN USER NOW' }}
+        </button>
         }
       </div>
     </div>

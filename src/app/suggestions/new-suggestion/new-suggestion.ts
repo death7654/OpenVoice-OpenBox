@@ -7,8 +7,9 @@ import { Subscription } from 'rxjs';
 // 🔥 Import Firestore and necessary functions
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 
+// 🔥 Import the new services
 import { AuthService, UserState } from '../../core/account-state';
-
+import { Gemini } from '../../core/gemini';
 declare const __app_id: string; 
 
 
@@ -46,7 +47,10 @@ interface Suggestion {
 export class NewSuggestion implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
-  private cd = inject(ChangeDetectorRef); 
+  private cd = inject(ChangeDetectorRef);
+  
+  // 🔥 INJECT THE GEMINI SERVICE
+  private geminiService = inject(Gemini); 
 
   // State properties
   private authSubscription!: Subscription;
@@ -55,6 +59,9 @@ export class NewSuggestion implements OnInit, OnDestroy {
   user_id: string | null = null; 
   is_banned: boolean = false;
   submissionMessage = '';
+  
+  // 🔥 New state for AI summary process
+  isSummarizing = false;
 
   // Form properties
   title = '';
@@ -76,19 +83,16 @@ export class NewSuggestion implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    // Subscription to userState$ to get real-time login status and user data
     this.authSubscription = this.authService.userState$.subscribe((state: UserState) => {
       this.isLoggedIn = state.isLoggedIn;
-      this.user_id = state.accountId; 
-      this.is_banned = state.isBanned; // Get the banned status
-      console.log(state);
+      this.user_id = state.randomId; 
+      this.is_banned = state.isBanned;
       
-      this.submissionMessage = ''; // Reset message first
+      this.submissionMessage = '';
       
       if (!this.isLoggedIn) {
         this.submissionMessage = 'You must be logged in to submit a new suggestion.';
       } else if (this.is_banned) {
-        // 🔥 Logic for Banned User: Set a specific message
         this.submissionMessage = 'Your account is banned from making submissions.';
       }
       
@@ -102,7 +106,7 @@ export class NewSuggestion implements OnInit, OnDestroy {
     }
   }
 
-  // --- Utility Methods (omitted for brevity) ---
+  // --- Utility Methods ---
   addTag(event: Event): void {
     const input = event.target as HTMLInputElement;
     const key = (event as KeyboardEvent).key;
@@ -154,9 +158,10 @@ export class NewSuggestion implements OnInit, OnDestroy {
     if (this.fontSize > 6) this.fontSize -= 2;
   }
 
-  getsummary(): string {
-    return this.description.substring(0, 100).trim() + '...';
-  }
+  // 🗑️ ORIGINAL getsummary() method replaced by AI summary in submit()
+  // getsummary(): string {
+  //   return this.description.substring(0, 100).trim() + '...';
+  // }
   
   resetForm() {
     this.title = '';
@@ -166,6 +171,7 @@ export class NewSuggestion implements OnInit, OnDestroy {
     this.preview = false;
     this.selectedCategory = '';
     this.fontSize = 14;
+    this.submissionMessage = ''; // Ensure message is reset
   }
 
 
@@ -178,7 +184,6 @@ export class NewSuggestion implements OnInit, OnDestroy {
       return;
     }
     
-    // 🔥 New Ban Check: Block submission if user is banned
     if (this.is_banned) {
       this.submissionMessage = 'Submission failed. Your account is currently banned.';
       console.warn('Submission blocked: User is banned.');
@@ -189,13 +194,34 @@ export class NewSuggestion implements OnInit, OnDestroy {
       this.submissionMessage = 'Please fill all required fields (Title, Description, Category)!';
       return;
     }
+    
+    this.isSummarizing = true;
+    this.submissionMessage = 'Generating AI summary...';
 
+    let aiSummary = '';
+
+    try {
+      // 🔥 STEP 1: Await the AI Summary Generation
+      aiSummary = await this.generateAiSummary();
+      this.submissionMessage = 'Submitting suggestion...';
+      
+    } catch (error) {
+      // Handle AI failure gracefully by falling back to the manual summary
+      console.error('AI Summary Generation Failed, falling back to manual summary.', error);
+      aiSummary = this.description.substring(0, 100).trim() + '...';
+      this.submissionMessage = 'AI summary failed. Submitting with default summary...';
+    } finally {
+      this.isSummarizing = false;
+    }
+
+
+    // 🔥 STEP 2: Construct the data using the AI-generated summary
     const suggestionData: Omit<Suggestion, 'id'> = {
       user_id: this.user_id,
       post_id: crypto.randomUUID(),
       title: this.title,
       description: this.description,
-      summary: this.getsummary(),
+      summary: aiSummary, // 👈 USE THE AI SUMMARY HERE
       tags: this.parsedTags,
       category: this.selectedCategory,
       upvotes: 0,
@@ -212,12 +238,13 @@ export class NewSuggestion implements OnInit, OnDestroy {
       resolved_at: null,
     };
 
+    // 🔥 STEP 3: Submit to Firestore
     try {
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
       
       const suggestionsCollectionRef = collection(
         this.firestore,
-        `${appId}/suggestions`
+        `artifacts/${appId}/suggestions`
       );
 
       await addDoc(suggestionsCollectionRef, suggestionData);
@@ -231,5 +258,17 @@ export class NewSuggestion implements OnInit, OnDestroy {
     }
     
     setTimeout(() => (this.submissionMessage = ''), 5000);
+  }
+  
+  /**
+   * Helper function to call the Gemini Service and convert the Observable to a Promise.
+   */
+  private generateAiSummary(): Promise<string> {
+      return new Promise((resolve, reject) => {
+          this.geminiService.generateSummary(this.description).subscribe({
+              next: (summary: string) => resolve(summary),
+              error: (err) => reject(err),
+          });
+      });
   }
 }
